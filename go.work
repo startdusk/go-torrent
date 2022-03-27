@@ -1,7 +1,8 @@
 go 1.18
 
 use (
-    ./bencode
-    ./search
-    ./cmd
+	./bencode
+	./search
+	./cmd
+	./torrent
 )
