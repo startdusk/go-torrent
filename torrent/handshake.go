@@ -8,20 +8,20 @@ import (
 const PROTOCOL = "BitTorrent protocol"
 
 type Handshake struct {
-	pstrlen  int
-	pstr     string
-	reserved [8]byte
-	infoHash [SHALEN]byte
-	peerID   [SHALEN]byte
+	Pstrlen  int
+	Pstr     string
+	Reserved [8]byte
+	InfoHash [SHALEN]byte
+	PeerID   [SHALEN]byte
 }
 
 func NewHandshake(infoHash, peerID [SHALEN]byte) *Handshake {
 	return &Handshake{
-		pstrlen:  len(PROTOCOL),
-		pstr:     PROTOCOL,
-		reserved: [8]byte{},
-		infoHash: infoHash,
-		peerID:   peerID,
+		Pstrlen:  len(PROTOCOL),
+		Pstr:     PROTOCOL,
+		Reserved: [8]byte{0, 0, 0, 0, 0, 0, 0, 0},
+		InfoHash: infoHash,
+		PeerID:   peerID,
 	}
 }
 
@@ -33,12 +33,12 @@ func (h Handshake) MsgLen() int {
 // handshake: <pstrlen><pstr><reserved><info_hash><peer_id>
 func (h *Handshake) Serialize() []byte {
 	buf := make([]byte, h.MsgLen())
-	buf[0] = byte(h.pstrlen)
+	buf[0] = byte(h.Pstrlen)
 	cur := 1
-	cur += copy(buf[cur:], h.pstr)
-	cur += copy(buf[cur:], h.reserved[:])
-	cur += copy(buf[cur:], h.infoHash[:])
-	cur += copy(buf[cur:], h.peerID[:])
+	cur += copy(buf[cur:], h.Pstr)
+	cur += copy(buf[cur:], h.Reserved[:])
+	cur += copy(buf[cur:], h.InfoHash[:])
+	cur += copy(buf[cur:], h.PeerID[:])
 	return buf
 }
 
@@ -53,8 +53,7 @@ func ReadHandshake(r io.Reader) (*Handshake, error) {
 		return nil, fmt.Errorf("pstrlen cannot be 0")
 	}
 
-	var handshake Handshake
-	contentBuf := make([]byte, handshake.MsgLen()-1)
+	contentBuf := make([]byte, 49+pstrlen-1)
 	_, err = io.ReadFull(r, contentBuf)
 	if err != nil {
 		return nil, err
@@ -63,8 +62,11 @@ func ReadHandshake(r io.Reader) (*Handshake, error) {
 	var infoHash, peerID [SHALEN]byte
 	copy(infoHash[:], contentBuf[pstrlen+8:pstrlen+8+20])
 	copy(peerID[:], contentBuf[pstrlen+8+20:])
-	handshake.infoHash = infoHash
-	handshake.peerID = peerID
-	handshake.pstr = string(contentBuf[0:pstrlen])
-	return &handshake, nil
+	return &Handshake{
+		Pstrlen:  pstrlen,
+		Pstr:     string(contentBuf[0:pstrlen]),
+		Reserved: [8]byte{0, 0, 0, 0, 0, 0, 0, 0},
+		InfoHash: infoHash,
+		PeerID:   peerID,
+	}, nil
 }
