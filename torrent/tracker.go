@@ -30,6 +30,7 @@ func FindPeers(tf *TorrentFile, peerID [20]byte, port uint16) ([]PeerInfo, error
 		return nil, err
 	}
 	defer resp.Body.Close()
+	// TODO: process another json format
 	res := new(struct {
 		Peers string `bencode:"peers"`
 	})
