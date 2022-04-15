@@ -1,4 +1,4 @@
-package torrent
+package handshake
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 )
 
 const PROTOCOL = "BitTorrent protocol"
+
+const SHALEN = 20
 
 type Handshake struct {
 	Pstrlen  int
@@ -15,7 +17,7 @@ type Handshake struct {
 	PeerID   [SHALEN]byte
 }
 
-func NewHandshake(infoHash, peerID [SHALEN]byte) *Handshake {
+func New(infoHash, peerID [SHALEN]byte) *Handshake {
 	return &Handshake{
 		Pstrlen:  len(PROTOCOL),
 		Pstr:     PROTOCOL,
@@ -42,7 +44,7 @@ func (h *Handshake) Serialize() []byte {
 	return buf
 }
 
-func ReadHandshake(r io.Reader) (*Handshake, error) {
+func Read(r io.Reader) (*Handshake, error) {
 	lenBuf := make([]byte, 1)
 	_, err := io.ReadFull(r, lenBuf)
 	if err != nil {

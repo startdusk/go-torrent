@@ -1,4 +1,4 @@
-package torrent
+package handshake
 
 import (
 	"bytes"
@@ -73,7 +73,7 @@ func TestHandshakeDeserialize(t *testing.T) {
 	for _, cc := range cases {
 		t.Run(cc.name, func(t *testing.T) {
 			reader := bytes.NewBuffer(cc.input)
-			h, err := ReadHandshake(reader)
+			h, err := Read(reader)
 			if cc.wantErr && err == nil {
 				t.Errorf("%s test unexpect want err but got %v", cc.name, err)
 			}
