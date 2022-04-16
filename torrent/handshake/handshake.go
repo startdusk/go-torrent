@@ -1,8 +1,11 @@
 package handshake
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"net"
+	"time"
 
 	"github.com/startdusk/go-torrent/torrent/torrent"
 )
@@ -72,4 +75,25 @@ func Read(r io.Reader) (*Handshake, error) {
 		InfoHash: infoHash,
 		PeerID:   peerID,
 	}, nil
+}
+
+func Connect(conn net.Conn, peerID torrent.PeerID, infoHash torrent.InfoHash, timeout time.Duration) (*Handshake, error) {
+	conn.SetDeadline(time.Now().Add(timeout))
+	defer conn.SetDeadline(time.Time{}) // Disable the deadline
+
+	req := New(peerID, infoHash)
+	_, err := conn.Write(req.Serialize())
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := Read(conn)
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(res.InfoHash[:], infoHash[:]) {
+		return nil, fmt.Errorf("expected info hash %x but got %x", res.InfoHash, infoHash)
+	}
+
+	return res, nil
 }

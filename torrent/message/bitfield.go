@@ -1,5 +1,11 @@
 package message
 
+import (
+	"fmt"
+	"net"
+	"time"
+)
+
 // A Bitfield represents the pieces that a peer has
 type Bitfield []byte
 
@@ -23,4 +29,22 @@ func (bf Bitfield) SetPiece(index int) {
 		return
 	}
 	bf[byteIndex] |= 1 << uint(7-offset)
+}
+
+func Receive(conn net.Conn, timeout time.Duration) (Bitfield, error) {
+	conn.SetDeadline(time.Now().Add(timeout))
+	defer conn.SetDeadline(time.Time{})
+
+	msg, err := Read(conn)
+	if err != nil {
+		return nil, err
+	}
+	if msg == nil {
+		return nil, fmt.Errorf("expected bitfield but got %v", msg)
+	}
+
+	if msg.ID != MsgBitfield {
+		return nil, fmt.Errorf("expected bitfield but got ID[%d]", msg.ID)
+	}
+	return msg.Payload, nil
 }
