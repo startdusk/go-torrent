@@ -177,6 +177,9 @@ func DecodeString(r io.Reader) (val string, err error) {
 		return val, ErrNum
 	}
 	b, err := br.ReadByte()
+	if err != nil {
+		return val, err
+	}
 	if b != ':' {
 		return val, ErrCol
 	}
@@ -209,6 +212,9 @@ func DecodeInt(r io.Reader) (val int, err error) {
 		br = bufio.NewReader(r)
 	}
 	b, err := br.ReadByte()
+	if err != nil {
+		return val, err
+	}
 	if b != 'i' {
 		return val, ErrEpI
 	}
