@@ -1,6 +1,8 @@
 package torrent
 
-func Download(tf *TorrentFile, peers []PeerInfo) error {
+import "github.com/startdusk/go-torrent/torrent/peer"
+
+func Download(tf *TorrentFile, peers []peer.PeerInfo) error {
 	//TODO: check local tmp file
 	//TODO: download piceces and check
 	//TODO: write picece bytes into local tmp file

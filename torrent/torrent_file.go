@@ -5,8 +5,11 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"net/url"
+	"strconv"
 
 	"github.com/startdusk/go-torrent/bencode"
+	"github.com/startdusk/go-torrent/torrent/torrent"
 )
 
 type rawInfo struct {
@@ -21,22 +24,11 @@ type rawFile struct {
 	Info     rawInfo `bencode:"info"`
 }
 
-const SHALEN int = 20
-
-type TorrentFile struct {
-	Announce string
-	InfoSHA  [SHALEN]byte
-	FileName string
-	FileLen  int
-	PieceLen int
-	PieceSHA [][SHALEN]byte
-}
-
 func ParseFile(r io.Reader) (*TorrentFile, error) {
 	raw := new(rawFile)
 	err := bencode.Unmarshal(r, raw)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to parse torrent file: %w", err)
+		return nil, fmt.Errorf("fail to parse torrent file: %w", err)
 	}
 	ret := new(TorrentFile)
 	ret.Announce = raw.Announce
@@ -53,11 +45,38 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 
 	// calculate pieces SHA
 	bys := []byte(raw.Info.Pieces)
-	cnt := len(bys) / SHALEN
-	hashes := make([][SHALEN]byte, cnt)
+	cnt := len(bys) / torrent.SHALEN
+	hashes := make(torrent.PieceSHA, cnt)
 	for i := 0; i < cnt; i++ {
-		copy(hashes[i][:], bys[i*SHALEN:(i+1)*SHALEN])
+		copy(hashes[i][:], bys[i*torrent.SHALEN:(i+1)*torrent.SHALEN])
 	}
 	ret.PieceSHA = hashes
 	return ret, nil
+}
+
+type TorrentFile struct {
+	Announce string
+	InfoSHA  torrent.InfoHash
+	FileName string
+	FileLen  int
+	PieceLen int
+	PieceSHA torrent.PieceSHA
+}
+
+func (tf *TorrentFile) BuildTrackerURL(peerID torrent.PeerID, port uint16) (string, error) {
+	base, err := url.Parse(tf.Announce)
+	if err != nil {
+		return "", err
+	}
+	params := url.Values{
+		"info_hash":  []string{string(tf.InfoSHA[:])},
+		"peer_id":    []string{string(peerID[:])},
+		"port":       []string{strconv.Itoa(int(port))},
+		"uploaded":   []string{"0"},
+		"downloaded": []string{"0"},
+		"compact":    []string{"1"},
+		"left":       []string{strconv.Itoa(tf.FileLen)},
+	}
+	base.RawQuery = params.Encode()
+	return base.String(), nil
 }

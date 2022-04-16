@@ -3,21 +3,21 @@ package handshake
 import (
 	"fmt"
 	"io"
+
+	"github.com/startdusk/go-torrent/torrent/torrent"
 )
 
 const PROTOCOL = "BitTorrent protocol"
-
-const SHALEN = 20
 
 type Handshake struct {
 	Pstrlen  int
 	Pstr     string
 	Reserved [8]byte
-	InfoHash [SHALEN]byte
-	PeerID   [SHALEN]byte
+	InfoHash torrent.InfoHash
+	PeerID   torrent.PeerID
 }
 
-func New(infoHash, peerID [SHALEN]byte) *Handshake {
+func New(infoHash, peerID torrent.PeerID) *Handshake {
 	return &Handshake{
 		Pstrlen:  len(PROTOCOL),
 		Pstr:     PROTOCOL,
@@ -61,7 +61,8 @@ func Read(r io.Reader) (*Handshake, error) {
 		return nil, err
 	}
 
-	var infoHash, peerID [SHALEN]byte
+	var infoHash torrent.InfoHash
+	var peerID torrent.PeerID
 	copy(infoHash[:], contentBuf[pstrlen+8:pstrlen+8+20])
 	copy(peerID[:], contentBuf[pstrlen+8+20:])
 	return &Handshake{
