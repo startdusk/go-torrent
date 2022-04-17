@@ -53,3 +53,52 @@ func New(peer peer.PeerInfo, peerID torrent.PeerID, infoHash torrent.InfoHash) (
 		peerID:   peerID,
 	}, nil
 }
+
+// Read reads and consumes a message from the connection
+func (c *Client) Read() (*message.Message, error) {
+	return message.Read(c.Conn)
+
+}
+
+// SendRequest sends a Request message to the peer
+func (c *Client) SendRequest(index, begin, length int) error {
+	msg := message.CreateReq(index, begin, length)
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SendChoke() error {
+	msg := message.Message{ID: message.MsgChoke}
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SendUnChoke() error {
+	msg := message.Message{ID: message.MsgUnchoke}
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SendInterested() error {
+	msg := message.Message{ID: message.MsgInterested}
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SendNotInterested() error {
+	msg := message.Message{ID: message.MsgNotInterested}
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SendHave(index int) error {
+	msg := message.CreateHave(index)
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}
+
+func (c *Client) SentCancel() error {
+	msg := message.Message{ID: message.MsgCancel}
+	_, err := c.Conn.Write(msg.Serialize())
+	return err
+}

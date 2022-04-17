@@ -19,11 +19,11 @@ func (p PeerInfo) String() string {
 // Unmarshal parses peer IP addresses and ports from a buffer
 func Unmarshal(bytes []byte) ([]PeerInfo, error) {
 	const peerSize = 6 // 4 for ip, 2 for port
-	peersLen := len(bytes) / peerSize
 	if len(bytes)%peerSize != 0 {
 		return nil, fmt.Errorf("received malformed peers")
 	}
 
+	peersLen := len(bytes) / peerSize
 	peers := make([]PeerInfo, peersLen)
 	for i := 0; i < peersLen; i++ {
 		offset := i * peerSize
