@@ -73,7 +73,7 @@ func (c *Client) SendChoke() error {
 	return err
 }
 
-func (c *Client) SendUnChoke() error {
+func (c *Client) SendUnchoke() error {
 	msg := message.Message{ID: message.MsgUnchoke}
 	_, err := c.Conn.Write(msg.Serialize())
 	return err
