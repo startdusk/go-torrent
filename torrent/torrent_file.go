@@ -41,35 +41,35 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 	if wlen == 0 {
 		return nil, fmt.Errorf("raw file info error, content len = %d", wlen)
 	}
-	ret.InfoSHA = sha1.Sum(buf.Bytes())
+	ret.InfoHash = sha1.Sum(buf.Bytes())
 
 	// calculate pieces SHA
 	bys := []byte(raw.Info.Pieces)
 	cnt := len(bys) / torrent.SHALEN
-	hashes := make(torrent.PieceSHA, cnt)
+	hashes := make(torrent.PieceHashes, cnt)
 	for i := 0; i < cnt; i++ {
 		copy(hashes[i][:], bys[i*torrent.SHALEN:(i+1)*torrent.SHALEN])
 	}
-	ret.PieceSHA = hashes
+	ret.PieceHashes = hashes
 	return ret, nil
 }
 
 type TorrentFile struct {
-	Announce string
-	InfoSHA  torrent.InfoHash
-	FileName string
-	FileLen  int
-	PieceLen int
-	PieceSHA torrent.PieceSHA
+	Announce    string
+	InfoHash    torrent.InfoHash
+	FileName    string
+	FileLen     int
+	PieceLen    int
+	PieceHashes torrent.PieceHashes
 }
 
-func (tf *TorrentFile) BuildTrackerURL(peerID torrent.PeerID, port uint16) (string, error) {
+func (tf *TorrentFile) BuildURL(peerID torrent.PeerID, port uint16) (string, error) {
 	base, err := url.Parse(tf.Announce)
 	if err != nil {
 		return "", err
 	}
 	params := url.Values{
-		"info_hash":  []string{string(tf.InfoSHA[:])},
+		"info_hash":  []string{string(tf.InfoHash[:])},
 		"peer_id":    []string{string(peerID[:])},
 		"port":       []string{strconv.Itoa(int(port))},
 		"uploaded":   []string{"0"},

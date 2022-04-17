@@ -9,4 +9,4 @@ type InfoHash = [SHALEN]byte
 
 type PeerID = [SHALEN]byte
 
-type PieceSHA = [][SHALEN]byte
+type PieceHashes = [][SHALEN]byte
