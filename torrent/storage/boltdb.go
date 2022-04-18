@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/startdusk/go-torrent/torrent/torrent"
 	"go.etcd.io/bbolt"
 )
 
@@ -37,7 +36,7 @@ func NewBoltDB(dir string) (ret Storage, err error) {
 	return
 }
 
-func (me boltdb) Get(pk torrent.MetaInfo) (cn Completion, err error) {
+func (me boltdb) Get(pk MetaData) (cn Completion, err error) {
 	err = me.db.View(func(tx *bbolt.Tx) error {
 		cb := tx.Bucket(completionBucketKey)
 		if cb == nil {
@@ -63,7 +62,7 @@ func (me boltdb) Get(pk torrent.MetaInfo) (cn Completion, err error) {
 	return
 }
 
-func (me boltdb) Set(pk torrent.MetaInfo, b bool) error {
+func (me boltdb) Set(pk MetaData, b bool) error {
 	if c, err := me.Get(pk); err == nil && c.Ok && c.Complete == b {
 		return nil
 	}

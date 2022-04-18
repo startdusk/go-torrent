@@ -4,9 +4,16 @@ import (
 	"github.com/startdusk/go-torrent/torrent/torrent"
 )
 
+type MetaData struct {
+	InfoHash torrent.InfoHash
+	Index    int
+	Begin    int
+	End      int
+}
+
 type Storage interface {
-	Get(me torrent.MetaInfo) (Completion, error)
-	Set(me torrent.MetaInfo, complete bool) error
+	Get(me MetaData) (Completion, error)
+	Set(me MetaData, complete bool) error
 	Close() error
 }
 

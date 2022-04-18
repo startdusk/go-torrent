@@ -26,7 +26,7 @@ type Torrent struct {
 	PeerID      torrent.PeerID
 	InfoHash    torrent.InfoHash
 	PieceHashes torrent.PieceHashes
-	PieceLength int
+	PieceLen    int
 	Length      int
 	Name        string
 }
@@ -84,8 +84,8 @@ func (state *pieceProgress) readMessage() error {
 }
 
 func (t *Torrent) calculateBoundsForPiece(index int) (begin int, end int) {
-	begin = index * t.PieceLength
-	end = begin + t.PieceLength
+	begin = index * t.PieceLen
+	end = begin + t.PieceLen
 	if end > t.Length {
 		end = t.Length
 	}
@@ -199,7 +199,7 @@ func (t *Torrent) Download() error {
 		// TODO: store to tmp file
 		// writeTmpPieceFile(res.buf)
 		// update storage
-		// db.Set(meta{ InfoHash, index: donePieces })
+		// db.Set(meta{ InfoHash, index: res.index, begin, end })
 		copy(buf[begin:end], res.buf)
 		donePieces++
 

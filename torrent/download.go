@@ -21,4 +21,16 @@ func MakeFile(tf *TorrentFile) {
 	// 使用内嵌的kv数据库(boltdb)存储临时文件的分片信息
 	// https://github1s.com/anacrolix/torrent/blob/master/storage/bolt-piece-completion.go
 
+	// buf := make([]byte, tf.FileLen)
+	// get index find the tmp file path
+	// outFile, err := os.Create(path)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer outFile.Close()
+	// _, err = outFile.Write(buf)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nil
 }
