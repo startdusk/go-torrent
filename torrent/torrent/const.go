@@ -9,4 +9,11 @@ type InfoHash = [SHALEN]byte
 
 type PeerID = [SHALEN]byte
 
-type PieceHashes = [][SHALEN]byte
+type PieceHashes = []Piece
+type Piece = [SHALEN]byte
+
+type MetaInfo struct {
+	InfoHash InfoHash
+	Piece    Piece
+	Index    int // piece index
+}
