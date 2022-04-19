@@ -78,8 +78,8 @@ func Read(r io.Reader) (*Handshake, error) {
 }
 
 // Connect net handshake
-func Connect(conn net.Conn, peerID torrent.PeerID, infoHash torrent.InfoHash, timeout time.Duration) (*Handshake, error) {
-	conn.SetDeadline(time.Now().Add(timeout))
+func Connect(conn net.Conn, peerID torrent.PeerID, infoHash torrent.InfoHash, deadline time.Time) (*Handshake, error) {
+	conn.SetDeadline(deadline)
 	defer conn.SetDeadline(time.Time{}) // Disable the deadline
 
 	req := New(peerID, infoHash)

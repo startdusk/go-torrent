@@ -29,6 +29,6 @@ func main() {
 		log.Printf("can not find peers")
 	}
 	// download from peers & make file
-	torrent.Download(tf, peers)
+	torrent.Download(tf, peerID, peers)
 	torrent.MakeFile(tf)
 }

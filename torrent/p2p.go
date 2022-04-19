@@ -5,7 +5,10 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/startdusk/go-torrent/torrent/client"
@@ -13,6 +16,8 @@ import (
 	"github.com/startdusk/go-torrent/torrent/peer"
 	"github.com/startdusk/go-torrent/torrent/torrent"
 )
+
+var Deadline = time.Now().Add(30 * time.Second)
 
 // MaxBlockSize is the largest number of bytes a request can ask for
 const MaxBlockSize = 16384
@@ -106,7 +111,7 @@ func attemptDownloadPiece(c *client.Client, pw *pieceWork) ([]byte, error) {
 
 	// Setting a deadline helps get unresponsive peers unstuck.
 	// 30 seconds is more than enough time to download a 262 KB piece
-	c.Conn.SetDeadline(time.Now().Add(30 * time.Second))
+	c.Conn.SetDeadline(Deadline)
 	defer c.Conn.SetDeadline(time.Time{}) // Disable the deadline
 
 	for state.downloaded < pw.length {
@@ -140,7 +145,7 @@ func attemptDownloadPiece(c *client.Client, pw *pieceWork) ([]byte, error) {
 func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceWork, results chan *pieceResult) {
 	c, err := client.New(peer, t.PeerID, t.InfoHash)
 	if err != nil {
-		log.Printf("Could not handshake with %s. Disconnecting\n", peer.IP)
+		log.Printf("Could not handshake with %s. Disconnecting, err %+v\n", peer.String(), err)
 		return
 	}
 	defer c.Conn.Close()
@@ -158,14 +163,14 @@ func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceW
 		// Download the piece
 		buf, err := attemptDownloadPiece(c, pw)
 		if err != nil {
-			log.Println("Exiting", err)
+			log.Printf("Exiting %+v\n", err)
 			workQueue <- pw // Put piece back on the queue
 			return
 		}
 
 		err = checkIntegrity(pw, buf)
 		if err != nil {
-			log.Printf("Piece #%d failed integrity check\n", pw.index)
+			log.Printf("Piece #%d failed integrity check err %+v\n", pw.index, err)
 			workQueue <- pw // Put piece back on the queue
 			continue
 		}
@@ -175,7 +180,7 @@ func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceW
 	}
 }
 
-func (t *Torrent) Download() error {
+func (t *Torrent) Download(tempDir string) error {
 	log.Println("Starting download for", t.Name)
 	// Init queues for workers to retrieve work and send results
 	workQueue := make(chan *pieceWork, len(t.PieceHashes))
@@ -190,17 +195,19 @@ func (t *Torrent) Download() error {
 		go t.startDownloadWorker(peer, workQueue, results)
 	}
 
-	// Collect results into a buffer until full
-	buf := make([]byte, t.Length)
 	donePieces := 0
 	for donePieces < len(t.PieceHashes) {
 		res := <-results
-		begin, end := t.calculateBoundsForPiece(res.index)
-		// TODO: store to tmp file
-		// writeTmpPieceFile(res.buf)
-		// update storage
-		// db.Set(meta{ InfoHash, index: res.index, begin, end })
-		copy(buf[begin:end], res.buf)
+		filePath := tempDir + "/" + strconv.Itoa(res.index)
+		os.MkdirAll(path.Dir(filePath), 0744)
+		fd, err := os.Create(filePath)
+		if err != nil {
+			return err
+		}
+		_, err = fd.Write(res.buf)
+		if err != nil {
+			return err
+		}
 		donePieces++
 
 		percent := float64(donePieces) / float64(len(t.PieceHashes)) * 100

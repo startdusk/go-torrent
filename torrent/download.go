@@ -1,36 +1,35 @@
 package torrent
 
 import (
+	"os"
+
 	"github.com/startdusk/go-torrent/torrent/peer"
+	"github.com/startdusk/go-torrent/torrent/torrent"
 )
 
-func Download(tf *TorrentFile, peers []peer.PeerInfo) error {
-	//TODO: check local tmp file
-	// tmpdir, err := os.MkdirTemp("", "torrent-tmp-")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	//TODO: download piceces and check
-	//TODO: write picece bytes into local tmp file
-	return nil
+const TempPrefix = "torrent-temp-"
+
+func Download(tf *TorrentFile, peerID torrent.PeerID, peers []peer.PeerInfo) error {
+	// check local tmp file
+	tempDir, err := os.MkdirTemp("", TempPrefix+string(tf.InfoHash[:]))
+	if err != nil {
+		return err
+	}
+	// download piceces and check
+	t := &Torrent{
+		Peers:       peers,
+		PeerID:      peerID,
+		InfoHash:    tf.InfoHash,
+		PieceHashes: tf.PieceHashes,
+		PieceLen:    tf.PieceLen,
+		Length:      tf.FileLen,
+		Name:        tf.FileName,
+	}
+	// write picece bytes into local tmp file
+	return t.Download(tempDir)
 }
 
 func MakeFile(tf *TorrentFile) {
 	//TODO: assemble tmp to file
-
-	// 使用内嵌的kv数据库(boltdb)存储临时文件的分片信息
-	// https://github1s.com/anacrolix/torrent/blob/master/storage/bolt-piece-completion.go
-
-	// buf := make([]byte, tf.FileLen)
-	// get index find the tmp file path
-	// outFile, err := os.Create(path)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer outFile.Close()
-	// _, err = outFile.Write(buf)
-	// if err != nil {
-	// 	return err
-	// }
-	// return nil
+	// cmd := fmt.Sprintf("cd %s && ls | sort -n | xargs cat > %s", srcPath, destPath)
 }

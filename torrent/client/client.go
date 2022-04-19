@@ -10,7 +10,7 @@ import (
 	"github.com/startdusk/go-torrent/torrent/torrent"
 )
 
-const Timeout = 3 * time.Second
+const Timeout = 5 * time.Second
 
 // Client a TCP connection with a peer
 type Client struct {
@@ -32,7 +32,7 @@ func New(peer peer.PeerInfo, peerID torrent.PeerID, infoHash torrent.InfoHash) (
 	}
 
 	// 2.complete handshake
-	_, err = handshake.Connect(conn, peerID, infoHash, Timeout)
+	_, err = handshake.Connect(conn, peerID, infoHash, time.Now().Add(Timeout))
 	if err != nil {
 		conn.Close()
 		return nil, err

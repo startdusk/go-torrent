@@ -123,7 +123,7 @@ func TestConnect(t *testing.T) {
 			clientConn, serverConn := createClientAndServer(t)
 			serverConn.Write(test.serverHandshake)
 
-			h, err := Connect(clientConn, test.clientPeerID, test.clientInfohash, 3*time.Second)
+			h, err := Connect(clientConn, test.clientPeerID, test.clientInfohash, time.Now().Add(5*time.Second))
 
 			if test.fails {
 				assert.NotNil(t, err)
