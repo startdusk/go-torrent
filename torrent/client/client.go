@@ -7,7 +7,7 @@ import (
 	"github.com/startdusk/go-torrent/torrent/handshake"
 	"github.com/startdusk/go-torrent/torrent/message"
 	"github.com/startdusk/go-torrent/torrent/peer"
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 const Timeout = 5 * time.Second
@@ -18,13 +18,13 @@ type Client struct {
 	Choked   bool
 	Bitfield message.Bitfield
 	peer     peer.PeerInfo
-	infoHash torrent.InfoHash
-	peerID   torrent.PeerID
+	infoHash types.InfoHash
+	peerID   types.PeerID
 }
 
 // New connects with a peer, completes a handshake, and receives a handshake
 // returns an err if any of those fail.
-func New(peer peer.PeerInfo, peerID torrent.PeerID, infoHash torrent.InfoHash) (*Client, error) {
+func New(peer peer.PeerInfo, peerID types.PeerID, infoHash types.InfoHash) (*Client, error) {
 	// 1.create a tcp connection
 	conn, err := net.DialTimeout("tcp", peer.String(), Timeout)
 	if err != nil {
@@ -57,7 +57,6 @@ func New(peer peer.PeerInfo, peerID torrent.PeerID, infoHash torrent.InfoHash) (
 // Read reads and consumes a message from the connection
 func (c *Client) Read() (*message.Message, error) {
 	return message.Read(c.Conn)
-
 }
 
 // SendRequest sends a Request message to the peer

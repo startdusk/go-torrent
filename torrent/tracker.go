@@ -5,10 +5,10 @@ import (
 
 	"github.com/startdusk/go-torrent/bencode"
 	"github.com/startdusk/go-torrent/torrent/peer"
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
-func FindPeers(tf *TorrentFile, peerID torrent.PeerID, port uint16) ([]peer.PeerInfo, error) {
+func FindPeers(tf *TorrentFile, peerID types.PeerID, port uint16) ([]peer.PeerInfo, error) {
 	url, err := tf.BuildURL(peerID, port)
 	if err != nil {
 		return nil, err

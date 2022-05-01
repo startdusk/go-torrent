@@ -6,11 +6,16 @@ import (
 	"os"
 
 	"github.com/startdusk/go-torrent/torrent"
+
+	"github.com/startdusk/go-torrent/torrent/types"
 )
+
+var testFile = "../testfile/debian.iso.torrent"
 
 func main() {
 	// parse torrent file
-	file, err := os.Open(os.Args[1])
+	// file, err := os.Open(os.Args[1])
+	file, err := os.Open(testFile)
 	if err != nil {
 		log.Fatalf("open file error %+v", err)
 	}
@@ -20,7 +25,7 @@ func main() {
 		log.Fatalf("parse file error %+v", err)
 	}
 	// connect tracker & find peers
-	peerID := [20]byte{'c', 'b', 't', '-', '2', '0', '2', '2', '-', '0', '4', '-', '1', '3', '-', '0', '0', '0', '0', '0'}
+	var peerID types.PeerID = [20]byte{}
 	peers, err := torrent.FindPeers(tf, peerID, 6881)
 	if err != nil {
 		log.Fatalf("find peers error %+v", err)

@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/startdusk/go-torrent/bencode"
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 type rawInfo struct {
@@ -45,10 +45,10 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 
 	// calculate pieces SHA
 	bys := []byte(raw.Info.Pieces)
-	cnt := len(bys) / torrent.SHALEN
-	hashes := make(torrent.PieceHashes, cnt)
+	cnt := len(bys) / types.SHALEN
+	hashes := make(types.PieceHashes, cnt)
 	for i := 0; i < cnt; i++ {
-		copy(hashes[i][:], bys[i*torrent.SHALEN:(i+1)*torrent.SHALEN])
+		copy(hashes[i][:], bys[i*types.SHALEN:(i+1)*types.SHALEN])
 	}
 	ret.PieceHashes = hashes
 	return ret, nil
@@ -56,14 +56,14 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 
 type TorrentFile struct {
 	Announce    string
-	InfoHash    torrent.InfoHash
+	InfoHash    types.InfoHash
 	FileName    string
 	FileLen     int
 	PieceLen    int
-	PieceHashes torrent.PieceHashes
+	PieceHashes types.PieceHashes
 }
 
-func (tf *TorrentFile) BuildURL(peerID torrent.PeerID, port uint16) (string, error) {
+func (tf *TorrentFile) BuildURL(peerID types.PeerID, port uint16) (string, error) {
 	base, err := url.Parse(tf.Announce)
 	if err != nil {
 		return "", err

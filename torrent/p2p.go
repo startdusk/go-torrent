@@ -14,7 +14,7 @@ import (
 	"github.com/startdusk/go-torrent/torrent/client"
 	"github.com/startdusk/go-torrent/torrent/message"
 	"github.com/startdusk/go-torrent/torrent/peer"
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 var Deadline = time.Now().Add(30 * time.Second)
@@ -28,9 +28,9 @@ const MaxBacklog = 5
 // Torrent holds data required to download a torrent from a list of peers
 type Torrent struct {
 	Peers       []peer.PeerInfo
-	PeerID      torrent.PeerID
-	InfoHash    torrent.InfoHash
-	PieceHashes torrent.PieceHashes
+	PeerID      types.PeerID
+	InfoHash    types.InfoHash
+	PieceHashes types.PieceHashes
 	PieceLen    int
 	Length      int
 	Name        string

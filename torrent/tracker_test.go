@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFindPeers(t *testing.T) {
-	file, err := os.Open("../testfile/debian-iso.torrent")
+	file, err := os.Open("../testfile/debian.iso.torrent")
 	assert.Equal(t, nil, err)
 	tf, err := ParseFile(bufio.NewReader(file))
 	assert.Equal(t, nil, err)

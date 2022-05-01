@@ -1,11 +1,11 @@
 package storage
 
 import (
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 type MetaData struct {
-	InfoHash torrent.InfoHash
+	InfoHash types.InfoHash
 	Index    int
 	Begin    int
 	End      int

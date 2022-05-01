@@ -1,4 +1,4 @@
-package torrent
+package types
 
 const SHALEN int = 20
 

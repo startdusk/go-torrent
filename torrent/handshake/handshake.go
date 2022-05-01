@@ -7,24 +7,26 @@ import (
 	"net"
 	"time"
 
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 const PROTOCOL = "BitTorrent protocol"
+
+var Extestions = [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
 
 type Handshake struct {
 	Pstrlen  int
 	Pstr     string
 	Reserved [8]byte
-	InfoHash torrent.InfoHash
-	PeerID   torrent.PeerID
+	InfoHash types.InfoHash
+	PeerID   types.PeerID
 }
 
-func New(infoHash, peerID torrent.PeerID) *Handshake {
+func New(infoHash, peerID types.PeerID) *Handshake {
 	return &Handshake{
 		Pstrlen:  len(PROTOCOL),
 		Pstr:     PROTOCOL,
-		Reserved: [8]byte{0, 0, 0, 0, 0, 0, 0, 0},
+		Reserved: Extestions,
 		InfoHash: infoHash,
 		PeerID:   peerID,
 	}
@@ -48,29 +50,23 @@ func (h *Handshake) Serialize() []byte {
 }
 
 func Read(r io.Reader) (*Handshake, error) {
-	lenBuf := make([]byte, 1)
-	_, err := io.ReadFull(r, lenBuf)
+	var buf [68]byte
+	_, err := io.ReadFull(r, buf[:68])
 	if err != nil {
 		return nil, err
 	}
-	pstrlen := int(lenBuf[0])
+	pstrlen := int(buf[0])
 	if pstrlen == 0 {
 		return nil, fmt.Errorf("pstrlen cannot be 0")
 	}
 
-	contentBuf := make([]byte, 49+pstrlen-1)
-	_, err = io.ReadFull(r, contentBuf)
-	if err != nil {
-		return nil, err
-	}
-
-	var infoHash torrent.InfoHash
-	var peerID torrent.PeerID
-	copy(infoHash[:], contentBuf[pstrlen+8:pstrlen+8+20])
-	copy(peerID[:], contentBuf[pstrlen+8+20:])
+	var infoHash types.InfoHash
+	var peerID types.PeerID
+	copy(infoHash[:], buf[1+pstrlen+8:1+pstrlen+8+20])
+	copy(peerID[:], buf[1+pstrlen+8+20:])
 	return &Handshake{
 		Pstrlen:  pstrlen,
-		Pstr:     string(contentBuf[0:pstrlen]),
+		Pstr:     string(buf[1 : pstrlen+1]),
 		Reserved: [8]byte{0, 0, 0, 0, 0, 0, 0, 0},
 		InfoHash: infoHash,
 		PeerID:   peerID,
@@ -78,19 +74,32 @@ func Read(r io.Reader) (*Handshake, error) {
 }
 
 // Connect net handshake
-func Connect(conn net.Conn, peerID torrent.PeerID, infoHash torrent.InfoHash, deadline time.Time) (*Handshake, error) {
+func Connect(conn net.Conn, peerID types.PeerID, infoHash types.InfoHash, deadline time.Time) (*Handshake, error) {
 	conn.SetDeadline(deadline)
 	defer conn.SetDeadline(time.Time{}) // Disable the deadline
 
-	req := New(peerID, infoHash)
-	_, err := conn.Write(req.Serialize())
+	// req := New(peerID, infoHash)
+	_, err := conn.Write([]byte("\x13" + PROTOCOL))
+	if err != nil {
+		return nil, err
+	}
+	_, err = conn.Write(Extestions[:])
+	if err != nil {
+		return nil, err
+	}
+	_, err = conn.Write(infoHash[:])
+	if err != nil {
+		return nil, err
+	}
+	_, err = conn.Write(peerID[:])
+	// _, err = conn.Write(req.Serialize())
 	if err != nil {
 		return nil, err
 	}
 
 	res, err := Read(conn)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot read conn err: %w", err)
 	}
 	if !bytes.Equal(res.InfoHash[:], infoHash[:]) {
 		return nil, fmt.Errorf("expected info hash %x but got %x", res.InfoHash, infoHash)

@@ -4,12 +4,12 @@ import (
 	"os"
 
 	"github.com/startdusk/go-torrent/torrent/peer"
-	"github.com/startdusk/go-torrent/torrent/torrent"
+	"github.com/startdusk/go-torrent/torrent/types"
 )
 
 const TempPrefix = "torrent-temp-"
 
-func Download(tf *TorrentFile, peerID torrent.PeerID, peers []peer.PeerInfo) error {
+func Download(tf *TorrentFile, peerID types.PeerID, peers []peer.PeerInfo) error {
 	// check local tmp file
 	tempDir, err := os.MkdirTemp("", TempPrefix+string(tf.InfoHash[:]))
 	if err != nil {
