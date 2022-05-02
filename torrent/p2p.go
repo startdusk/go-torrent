@@ -189,11 +189,16 @@ func (t *Torrent) Download(tempDir string) error {
 		go t.startDownloadWorker(peer, workQueue, results)
 	}
 
+	defer close(workQueue)
+
 	donePieces := 0
 	for donePieces < len(t.PieceHashes) {
 		res := <-results
 		filePath := tempDir + "/" + strconv.Itoa(res.index)
-		os.MkdirAll(path.Dir(filePath), 0744)
+		err := os.MkdirAll(path.Dir(filePath), 0744)
+		if err != nil {
+			return err
+		}
 		fd, err := os.Create(filePath)
 		if err != nil {
 			return err
@@ -206,9 +211,8 @@ func (t *Torrent) Download(tempDir string) error {
 
 		percent := float64(donePieces) / float64(len(t.PieceHashes)) * 100
 		numWorkers := runtime.NumGoroutine() - 1 // subtract 1 for main thread
-		log.Printf("[%0.2f%%] Downloaded piece #%d from peer #%d\n", percent, res.index, numWorkers)
+		log.Printf("[%0.2f%%] Downloaded piece #%d from %d peers\n", percent, res.index, numWorkers)
 	}
-	close(workQueue)
 
 	return nil
 }

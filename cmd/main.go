@@ -10,12 +10,12 @@ import (
 	"github.com/startdusk/go-torrent/torrent/types"
 )
 
-var testFile = "../testfile/debian.iso.torrent"
-
 func main() {
+	if len(os.Args[1:]) != 2 {
+		log.Fatal("please input the torrent file path and output file path eg: go-torrent ./demo.torrent ./demo.iso")
+	}
 	// parse torrent file
-	// file, err := os.Open(os.Args[1])
-	file, err := os.Open(testFile)
+	file, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Fatalf("open file error %+v", err)
 	}
@@ -34,6 +34,13 @@ func main() {
 		log.Fatalf("can not find peers")
 	}
 	// download from peers & make file
-	torrent.Download(tf, peerID, peers)
-	torrent.MakeFile(tf)
+	tempDir, err := torrent.Download(tf, peerID, peers)
+	if err != nil {
+		log.Fatal(err)
+	}
+	target := os.Args[2] + tf.FileName
+	err = torrent.MakeFile(tf, tempDir, target)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
