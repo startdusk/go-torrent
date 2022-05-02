@@ -78,7 +78,6 @@ func Connect(conn net.Conn, peerID types.PeerID, infoHash types.InfoHash, deadli
 	conn.SetDeadline(deadline)
 	defer conn.SetDeadline(time.Time{}) // Disable the deadline
 
-	// req := New(peerID, infoHash)
 	_, err := conn.Write([]byte("\x13" + PROTOCOL))
 	if err != nil {
 		return nil, err
@@ -92,7 +91,6 @@ func Connect(conn net.Conn, peerID types.PeerID, infoHash types.InfoHash, deadli
 		return nil, err
 	}
 	_, err = conn.Write(peerID[:])
-	// _, err = conn.Write(req.Serialize())
 	if err != nil {
 		return nil, err
 	}

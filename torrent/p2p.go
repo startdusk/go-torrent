@@ -3,21 +3,20 @@ package torrent
 import (
 	"bytes"
 	"crypto/sha1"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
-	"time"
 
 	"github.com/startdusk/go-torrent/torrent/client"
 	"github.com/startdusk/go-torrent/torrent/message"
 	"github.com/startdusk/go-torrent/torrent/peer"
 	"github.com/startdusk/go-torrent/torrent/types"
 )
-
-var Deadline = time.Now().Add(30 * time.Second)
 
 // MaxBlockSize is the largest number of bytes a request can ask for
 const MaxBlockSize = 16384
@@ -109,11 +108,6 @@ func attemptDownloadPiece(c *client.Client, pw *pieceWork) ([]byte, error) {
 		buf:    make([]byte, pw.length),
 	}
 
-	// Setting a deadline helps get unresponsive peers unstuck.
-	// 30 seconds is more than enough time to download a 262 KB piece
-	c.Conn.SetDeadline(Deadline)
-	defer c.Conn.SetDeadline(time.Time{}) // Disable the deadline
-
 	for state.downloaded < pw.length {
 		// If unchoked, send requests until we have enough unfulfilled requests
 		if !state.client.Choked {
@@ -162,10 +156,10 @@ func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceW
 
 		// Download the piece
 		buf, err := attemptDownloadPiece(c, pw)
-		if err != nil {
+		if err != nil && !errors.Is(err, io.EOF) {
 			log.Printf("Exiting %+v\n", err)
 			workQueue <- pw // Put piece back on the queue
-			return
+			continue
 		}
 
 		err = checkIntegrity(pw, buf)
@@ -212,7 +206,7 @@ func (t *Torrent) Download(tempDir string) error {
 
 		percent := float64(donePieces) / float64(len(t.PieceHashes)) * 100
 		numWorkers := runtime.NumGoroutine() - 1 // subtract 1 for main thread
-		log.Printf("(%0.2f%%) Downloaded piece #%d from %d peers\n", percent, res.index, numWorkers)
+		log.Printf("[%0.2f%%] Downloaded piece #%d from peer #%d\n", percent, res.index, numWorkers)
 	}
 	close(workQueue)
 

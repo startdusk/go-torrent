@@ -1,6 +1,7 @@
 package torrent
 
 import (
+	"encoding/hex"
 	"os"
 
 	"github.com/startdusk/go-torrent/torrent/peer"
@@ -11,7 +12,7 @@ const TempPrefix = "torrent-temp-"
 
 func Download(tf *TorrentFile, peerID types.PeerID, peers []peer.PeerInfo) error {
 	// check local tmp file
-	tempDir, err := os.MkdirTemp("", TempPrefix+string(tf.InfoHash[:]))
+	tempDir, err := os.MkdirTemp("", TempPrefix+hex.EncodeToString(tf.InfoHash[:]))
 	if err != nil {
 		return err
 	}
