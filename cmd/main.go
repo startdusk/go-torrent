@@ -12,7 +12,7 @@ import (
 
 func main() {
 	if len(os.Args[1:]) != 2 {
-		log.Fatal("please input the torrent file path and output file path eg: go-torrent ./demo.torrent ./demo.iso")
+		log.Fatal("please input the torrent file path and output file path eg: go-torrent ./demo.torrent ./")
 	}
 	// parse torrent file
 	file, err := os.Open(os.Args[1])

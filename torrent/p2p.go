@@ -156,6 +156,7 @@ func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceW
 
 		// Download the piece
 		buf, err := attemptDownloadPiece(c, pw)
+		// TODO: fix write broken pipe error
 		if err != nil && !errors.Is(err, io.EOF) {
 			log.Printf("Exiting %+v\n", err)
 			workQueue <- pw // Put piece back on the queue

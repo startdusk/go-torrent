@@ -1,11 +1,11 @@
 package torrent
 
 import (
-	"bytes"
+	"bufio"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
-	"os/exec"
 
 	"github.com/startdusk/go-torrent/torrent/peer"
 	"github.com/startdusk/go-torrent/torrent/types"
@@ -36,22 +36,18 @@ func Download(tf *TorrentFile, peerID types.PeerID, peers []peer.PeerInfo) (stri
 
 func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 	// assemble tmp to file
-	// TODO: support other platform
-	cmd := fmt.Sprintf("cd %s && ls | sort -n | xargs cat > %s", sourceDir, targetDir)
-	_, err := execLinuxShell(cmd)
-	return err
-}
-
-func execLinuxShell(s string) (string, error) {
-	cmd := exec.Command("/bin/bash", "-c", s)
-
-	var result bytes.Buffer
-	cmd.Stdout = &result
-
-	err := cmd.Run()
+	f, err := os.Create(targetDir)
 	if err != nil {
-		return "", err
+		return err
 	}
+	w := bufio.NewWriter(f)
 
-	return result.String(), err
+	for i := 0; i < tf.PieceLen; i++ {
+		file, err := os.Open(sourceDir + "/" + fmt.Sprintf("%d", i))
+		if err != nil {
+			return fmt.Errorf("cannot find #%d piece: %w", i, err)
+		}
+		io.Copy(w, file)
+	}
+	return w.Flush()
 }
