@@ -12,7 +12,7 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "console": "internalConsole",
-            "args": ["../testfile/debian.iso.torrent", "./"]
+            // "args": ["../testfile/debian.iso.torrent", "./"] // for debug
         },
     ]
 }

@@ -38,8 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	target := os.Args[2] + tf.FileName
-	err = torrent.MakeFile(tf, tempDir, target)
+	err = torrent.MakeFile(tf, tempDir, os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}
