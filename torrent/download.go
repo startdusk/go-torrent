@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/startdusk/go-torrent/torrent/peer"
@@ -19,7 +20,7 @@ func Download(tf *TorrentFile, peerID types.PeerID, peers []peer.PeerInfo) (stri
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(tempDir)
+
 	// download piceces and check
 	t := &Torrent{
 		Peers:       peers,
@@ -30,11 +31,13 @@ func Download(tf *TorrentFile, peerID types.PeerID, peers []peer.PeerInfo) (stri
 		Length:      tf.FileLen,
 		Name:        tf.FileName,
 	}
+
 	// write picece bytes into local tmp file
 	return tempDir, t.Download(tempDir)
 }
 
 func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
+	log.Printf("assemble file: %s\n", tf.FileName)
 	// assemble tmp to file
 	f, err := os.Create(targetDir + "/" + tf.FileName)
 	if err != nil {
@@ -47,7 +50,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 		err := func() error {
 			file, err := os.Open(sourceDir + "/" + fmt.Sprintf("%d", i))
 			if err != nil {
-				return fmt.Errorf("cannot find #%d piece: %w", i, err)
+				return fmt.Errorf("cannot find the #%d piece: %w", i, err)
 			}
 			defer file.Close()
 			io.Copy(w, file)
@@ -57,5 +60,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 			return err
 		}
 	}
+
+	log.Printf("completed assemble file: %s !!!\n", tf.FileName)
 	return w.Flush()
 }

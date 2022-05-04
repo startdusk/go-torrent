@@ -10,7 +10,7 @@ import (
 	"github.com/startdusk/go-torrent/torrent/types"
 )
 
-const Timeout = 500 * time.Second
+const Timeout = 5 * time.Second
 
 // Client a TCP connection with a peer
 type Client struct {

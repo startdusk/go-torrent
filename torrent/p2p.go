@@ -142,11 +142,16 @@ func attemptDownloadPiece(c *client.Client, pw *pieceWork) ([]byte, error) {
 func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceWork, results chan *pieceResult) {
 	c, err := client.New(peer, t.PeerID, t.InfoHash)
 	if err != nil {
-		log.Printf("Could not handshake with %s. Disconnecting, err %+v\n", peer.String(), err)
+		// if os.IsTimeout(err) {
+		// 	log.Printf("peer %s handshake timeout, try reshake hands\n", peer)
+		// 	t.peerQ <- peer
+		// 	return
+		// }
+		log.Printf("Could not handshake with %s. Disconnecting, err %+v\n", peer, err)
 		return
 	}
 	defer c.Conn.Close()
-	log.Printf("Completed handshake with %s\n", peer.IP)
+	log.Printf("Completed handshake with %s\n", peer)
 
 	c.SendUnchoke()
 	c.SendInterested()
