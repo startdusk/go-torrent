@@ -10,6 +10,9 @@ import (
 	"github.com/startdusk/go-torrent/torrent/types"
 )
 
+var peerID types.PeerID = [20]byte{}
+var port uint16 = 6881
+
 func main() {
 	if len(os.Args[1:]) != 2 {
 		log.Fatal("please input the torrent file path and output file path eg: go-torrent ./demo.torrent ./")
@@ -25,8 +28,7 @@ func main() {
 		log.Fatalf("parse file error %+v", err)
 	}
 	// connect tracker & find peers
-	var peerID types.PeerID = [20]byte{}
-	peers, err := torrent.FindPeers(tf, peerID, 6881)
+	peers, err := torrent.FindPeers(tf, peerID, port)
 	if err != nil {
 		log.Fatalf("find peers error %+v", err)
 	}
