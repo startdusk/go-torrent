@@ -190,8 +190,10 @@ func (t *Torrent) Download(tempDir string) error {
 		go t.startDownloadWorker(peer, workQueue, results)
 	}
 
-	defer close(workQueue)
-
+	defer func() {
+		close(workQueue)
+		close(results)
+	}()
 	donePieces := 0
 	for donePieces < len(t.PieceHashes) {
 		res := <-results
