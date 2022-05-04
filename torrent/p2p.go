@@ -11,6 +11,7 @@ import (
 	"path"
 	"runtime"
 	"strconv"
+	"syscall"
 
 	"github.com/startdusk/go-torrent/torrent/client"
 	"github.com/startdusk/go-torrent/torrent/message"
@@ -33,6 +34,8 @@ type Torrent struct {
 	PieceLen    int
 	Length      int
 	Name        string
+
+	peerQ chan peer.PeerInfo
 }
 
 type pieceWork struct {
@@ -156,11 +159,19 @@ func (t *Torrent) startDownloadWorker(peer peer.PeerInfo, workQueue chan *pieceW
 
 		// Download the piece
 		buf, err := attemptDownloadPiece(c, pw)
-		// TODO: fix write broken pipe error
-		if err != nil && !errors.Is(err, io.EOF) {
-			log.Printf("Exiting %+v\n", err)
-			workQueue <- pw // Put piece back on the queue
-			continue
+		if err != nil {
+			// fixed write broken pipe error
+			if errors.Is(err, syscall.EPIPE) {
+				log.Printf("peer %v broken pipe, try reconnection\n", peer)
+				workQueue <- pw // Put piece back on the queue
+				t.peerQ <- peer
+				return
+			}
+			if !errors.Is(err, io.EOF) {
+				log.Printf("Exiting %+v\n", err)
+				workQueue <- pw // Put piece back on the queue
+				continue
+			}
 		}
 
 		err = checkIntegrity(pw, buf)
@@ -179,12 +190,17 @@ func (t *Torrent) Download(tempDir string) error {
 	log.Println("Starting download for", t.Name)
 	// Init queues for workers to retrieve work and send results
 	workQueue := make(chan *pieceWork, len(t.PieceHashes))
+	t.peerQ = make(chan peer.PeerInfo, len(t.Peers))
 	results := make(chan *pieceResult)
 	for index, hash := range t.PieceHashes {
 		length := t.calculatePieceSize(index)
 		workQueue <- &pieceWork{index, hash, length}
 	}
-
+	go func() {
+		for peer := range t.peerQ {
+			go t.startDownloadWorker(peer, workQueue, results)
+		}
+	}()
 	// Start workers
 	for _, peer := range t.Peers {
 		go t.startDownloadWorker(peer, workQueue, results)
@@ -193,6 +209,7 @@ func (t *Torrent) Download(tempDir string) error {
 	defer func() {
 		close(workQueue)
 		close(results)
+		close(t.peerQ)
 	}()
 	donePieces := 0
 	for donePieces < len(t.PieceHashes) {

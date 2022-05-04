@@ -43,7 +43,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 	defer f.Close()
 	w := bufio.NewWriter(f)
 
-	for i := 0; i < tf.PieceLen; i++ {
+	for i := 0; i < len(tf.PieceHashes); i++ {
 		err := func() error {
 			file, err := os.Open(sourceDir + "/" + fmt.Sprintf("%d", i))
 			if err != nil {
