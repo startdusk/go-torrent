@@ -13,15 +13,27 @@ import (
 )
 
 type rawInfo struct {
-	Length      int    `bencode:"length"`
-	Name        string `bencode:"name"`
-	PieceLength int    `bencode:"piece length"`
-	Pieces      string `bencode:"pieces"`
+	Length      int64   `bencode:"length"`
+	Name        string  `bencode:"name"`
+	PieceLength int     `bencode:"piece length"`
+	Pieces      string  `bencode:"pieces"`
+	Private     *int    `bencode:"private"`
+	Files       []File  `bencode:"files"`
+	MD5Sum      *string `bencode:"md5sum"`
+}
+
+func (r rawInfo) IsMultiple() bool {
+	return len(r.Files) > 0
 }
 
 type rawFile struct {
-	Announce string  `bencode:"announce"`
-	Info     rawInfo `bencode:"info"`
+	Announce     string     `bencode:"announce"`
+	AnnounceList [][]string `bencode:"announce-list"`
+	CreationDate int64      `bencode:"creation date"`
+	Comment      string     `bencdoe:"comment"`
+	CreatedBy    string     `bencode:"created by"`
+	Encoding     string     `bencode:"encoding"`
+	Info         rawInfo    `bencode:"info"`
 }
 
 func ParseFile(r io.Reader) (*TorrentFile, error) {
@@ -32,12 +44,39 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 	}
 	ret := new(TorrentFile)
 	ret.Announce = raw.Announce
+	ret.AnnounceList = raw.AnnounceList
+	ret.CreationDate = raw.CreationDate
+	ret.CreatedBy = raw.CreatedBy
+	ret.Comment = raw.Comment
+	ret.Encoding = raw.Encoding
 	ret.FileName = raw.Info.Name
 	ret.FileLen = raw.Info.Length
 	ret.PieceLen = raw.Info.PieceLength
 	// calculate info SHA
 	buf := new(bytes.Buffer)
-	wlen := bencode.Marshal(buf, raw.Info)
+	var wlen int
+	if raw.Info.IsMultiple() {
+		ret.Info = Multiple
+		ret.MultipleFile = MultipleFile{
+			PieceLength: raw.Info.PieceLength,
+			Pieces:      raw.Info.Pieces,
+			Private:     raw.Info.Private,
+			Name:        raw.Info.Name,
+			Files:       raw.Info.Files,
+		}
+		wlen = bencode.Marshal(buf, ret.MultipleFile)
+	} else {
+		ret.Info = Single
+		ret.SingleFile = SingleFile{
+			PieceLength: raw.Info.PieceLength,
+			Pieces:      raw.Info.Pieces,
+			Private:     raw.Info.Private,
+			Name:        raw.Info.Name,
+			Length:      raw.Info.Length,
+			MD5Sum:      raw.Info.MD5Sum,
+		}
+		wlen = bencode.Marshal(buf, ret.SingleFile)
+	}
 	if wlen == 0 {
 		return nil, fmt.Errorf("raw file info error, content len = %d", wlen)
 	}
@@ -55,12 +94,55 @@ func ParseFile(r io.Reader) (*TorrentFile, error) {
 }
 
 type TorrentFile struct {
-	Announce    string
-	InfoHash    types.InfoHash
-	FileName    string
-	FileLen     int
-	PieceLen    int
-	PieceHashes types.PieceHashes
+	Info         Info
+	Announce     string
+	AnnounceList [][]string
+	InfoHash     types.InfoHash
+	CreationDate int64
+	Comment      string
+	CreatedBy    string
+	Encoding     string
+	FileName     string
+	FileLen      int64
+	PieceLen     int
+	PieceHashes  types.PieceHashes
+
+	SingleFile   SingleFile
+	MultipleFile MultipleFile
+}
+
+type File struct {
+	Length int64    `bencode:"length"`
+	Path   []string `bencode:"path"`
+	MD5Sum *string  `bencode:"md5sum"`
+}
+
+type Info int
+
+const (
+	Single Info = 1 << iota
+	Multiple
+)
+
+func (i Info) IsMultiple() bool {
+	return i == Multiple
+}
+
+type SingleFile struct {
+	Length      int64   `bencode:"length"`
+	Name        string  `bencode:"name"`
+	PieceLength int     `bencode:"piece length"`
+	Pieces      string  `bencode:"pieces"`
+	Private     *int    `bencode:"private"`
+	MD5Sum      *string `bencode:"md5sum"`
+}
+
+type MultipleFile struct {
+	Files       []File `bencode:"files"`
+	Name        string `bencode:"name"`
+	PieceLength int    `bencode:"piece length"`
+	Pieces      string `bencode:"pieces"`
+	Private     *int   `bencode:"private"`
 }
 
 func (tf *TorrentFile) BuildURL(peerID types.PeerID, port uint16) (string, error) {
@@ -75,7 +157,7 @@ func (tf *TorrentFile) BuildURL(peerID types.PeerID, port uint16) (string, error
 		"uploaded":   []string{"0"},
 		"downloaded": []string{"0"},
 		"compact":    []string{"1"},
-		"left":       []string{strconv.Itoa(tf.FileLen)},
+		"left":       []string{fmt.Sprintf("%d", tf.FileLen)},
 	}
 	base.RawQuery = params.Encode()
 	return base.String(), nil

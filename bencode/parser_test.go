@@ -14,7 +14,7 @@ func objAssertStr(t *testing.T, expect string, o *BObject) {
 	assert.Equal(t, expect, str)
 }
 
-func objAssertInt(t *testing.T, expect int, o *BObject) {
+func objAssertInt(t *testing.T, expect int64, o *BObject) {
 	assert.Equal(t, BINT, o.typ)
 	val, err := o.Int()
 	assert.Equal(t, nil, err)

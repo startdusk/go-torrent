@@ -32,7 +32,7 @@ type Torrent struct {
 	InfoHash    types.InfoHash
 	PieceHashes types.PieceHashes
 	PieceLen    int
-	Length      int
+	Length      int64
 	Name        string
 
 	peerQ chan peer.PeerInfo
@@ -93,8 +93,8 @@ func (state *pieceProgress) readMessage() error {
 func (t *Torrent) calculateBoundsForPiece(index int) (begin int, end int) {
 	begin = index * t.PieceLen
 	end = begin + t.PieceLen
-	if end > t.Length {
-		end = t.Length
+	if end > int(t.Length) {
+		end = int(t.Length)
 	}
 	return begin, end
 }

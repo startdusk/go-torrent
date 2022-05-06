@@ -27,7 +27,7 @@ func TestString(t *testing.T) {
 }
 
 func TestInt(t *testing.T) {
-	val := 999
+	var val int64 = 999
 	buf := new(bytes.Buffer)
 	wLen := EncodeInt(buf, val)
 	assert.Equal(t, 5, wLen)

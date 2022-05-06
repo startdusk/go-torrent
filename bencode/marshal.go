@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+func Marshal(w io.Writer, s interface{}) int {
+	v := reflect.ValueOf(s)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	return marshalValue(w, v)
+}
+
 func Unmarshal(r io.Reader, s interface{}) error {
 	o, err := Parse(r)
 	if err != nil {
@@ -61,7 +69,7 @@ func unmarshalList(p reflect.Value, list []*BObject) error {
 			if err != nil {
 				return err
 			}
-			v.Index(i).SetInt(int64(val))
+			v.Index(i).SetInt(val)
 		}
 	case BLIST:
 		for i, o := range list {
@@ -129,11 +137,13 @@ func unmarshalDict(p reflect.Value, dict map[string]*BObject) error {
 			val, _ := fo.Str()
 			fv.SetString(val)
 		case BINT:
-			if ft.Type.Kind() != reflect.Int {
-				break
+			if ft.Type.Kind() == reflect.Int64 {
+				val, _ := fo.Int()
+				fv.SetInt(val)
+			} else if ft.Type.Kind() == reflect.Int {
+				val, _ := fo.Int()
+				fv.SetInt(int64(val))
 			}
-			val, _ := fo.Int()
-			fv.SetInt(int64(val))
 		case BLIST:
 			if ft.Type.Kind() != reflect.Slice {
 				break
@@ -168,8 +178,8 @@ func marshalValue(w io.Writer, v reflect.Value) int {
 	switch v.Kind() {
 	case reflect.String:
 		len += EncodeString(w, v.String())
-	case reflect.Int:
-		len += EncodeInt(w, int(v.Int()))
+	case reflect.Int, reflect.Int64:
+		len += EncodeInt(w, v.Int())
 	case reflect.Slice:
 		len += marshalList(w, v)
 	case reflect.Struct:
@@ -194,6 +204,9 @@ func marshalDict(w io.Writer, vd reflect.Value) int {
 	w.Write([]byte{'d'})
 	for i := 0; i < vd.NumField(); i++ {
 		fv := vd.Field(i)
+		if isEmptyValue(fv) {
+			continue
+		}
 		ft := vd.Type().Field(i)
 		key := ft.Tag.Get("bencode")
 		if key == "" {
@@ -206,10 +219,20 @@ func marshalDict(w io.Writer, vd reflect.Value) int {
 	return len
 }
 
-func Marshal(w io.Writer, s interface{}) int {
-	v := reflect.ValueOf(s)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
+func isEmptyValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Pointer:
+		return v.IsNil()
 	}
-	return marshalValue(w, v)
+	return false
 }

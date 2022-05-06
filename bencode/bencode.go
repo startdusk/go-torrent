@@ -38,11 +38,11 @@ func (o *BObject) Str() (string, error) {
 	return o.val.(string), nil
 }
 
-func (o *BObject) Int() (int, error) {
+func (o *BObject) Int() (int64, error) {
 	if o.typ != BINT {
 		return 0, ErrTyp
 	}
-	return o.val.(int), nil
+	return o.val.(int64), nil
 }
 
 func (o *BObject) List() ([]*BObject, error) {
@@ -98,7 +98,7 @@ func checkNum(data byte) bool {
 	return data >= '0' && data <= '9'
 }
 
-func readDecimal(r *bufio.Reader) (val int, len int) {
+func readDecimal(r *bufio.Reader) (val int64, len int) {
 	sign := 1
 	b, _ := r.ReadByte()
 	len++
@@ -111,15 +111,15 @@ func readDecimal(r *bufio.Reader) (val int, len int) {
 		if !checkNum(b) {
 			r.UnreadByte()
 			len--
-			return sign * val, len
+			return int64(sign) * val, len
 		}
-		val = val*10 + int(b-'0')
+		val = val*10 + int64(b-'0')
 		b, _ = r.ReadByte()
 		len++
 	}
 }
 
-func writeDecimal(w *bufio.Writer, val int) (len int) {
+func writeDecimal(w *bufio.Writer, val int64) (len int) {
 	if val == 0 {
 		w.WriteByte('0')
 		len++
@@ -131,7 +131,7 @@ func writeDecimal(w *bufio.Writer, val int) (len int) {
 		val *= -1
 	}
 
-	dividend := 1
+	dividend := int64(1)
 	for {
 		if dividend > val {
 			dividend /= 10
@@ -154,7 +154,7 @@ func writeDecimal(w *bufio.Writer, val int) (len int) {
 func EncodeString(w io.Writer, val string) int {
 	strLen := len(val)
 	bw := bufio.NewWriter(w)
-	wLen := writeDecimal(bw, strLen)
+	wLen := writeDecimal(bw, int64(strLen))
 	bw.WriteByte(':')
 	wLen++
 	bw.WriteString(val)
@@ -184,12 +184,12 @@ func DecodeString(r io.Reader) (val string, err error) {
 		return val, ErrCol
 	}
 	buf := make([]byte, num)
-	_, err = io.ReadAtLeast(br, buf, num)
+	_, err = io.ReadAtLeast(br, buf, int(num))
 	val = string(buf)
 	return
 }
 
-func EncodeInt(w io.Writer, val int) int {
+func EncodeInt(w io.Writer, val int64) int {
 	bw := bufio.NewWriter(w)
 	wLen := 0
 	bw.WriteByte('i')
@@ -206,7 +206,7 @@ func EncodeInt(w io.Writer, val int) int {
 	return wLen
 }
 
-func DecodeInt(r io.Reader) (val int, err error) {
+func DecodeInt(r io.Reader) (val int64, err error) {
 	br, ok := r.(*bufio.Reader)
 	if !ok {
 		br = bufio.NewReader(r)
