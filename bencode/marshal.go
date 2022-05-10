@@ -204,6 +204,8 @@ func marshalDict(w io.Writer, vd reflect.Value) int {
 	w.Write([]byte{'d'})
 	for i := 0; i < vd.NumField(); i++ {
 		fv := vd.Field(i)
+		// Ignore nil field
+		// Because the nil field will affect the hash calculation later
 		if isEmptyValue(fv) {
 			continue
 		}

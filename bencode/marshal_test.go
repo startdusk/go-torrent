@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 type User struct {
@@ -46,7 +46,7 @@ func TestUnmarshalList(t *testing.T) {
 	str := `li85ei90ei95ee`
 	l := &[]int{}
 	Unmarshal(bytes.NewBufferString(str), l)
-	assert.DeepEqual(t, []int{85, 90, 95}, *l)
+	assert.Equal(t, []int{85, 90, 95}, *l)
 
 	buf := new(bytes.Buffer)
 	length := Marshal(buf, l)
@@ -87,7 +87,7 @@ func TestUnmarshalScore(t *testing.T) {
 	Unmarshal(bytes.NewBufferString(str), s)
 	assert.Equal(t, "archer", s.Name)
 	assert.Equal(t, 29, s.Age)
-	assert.DeepEqual(t, []int{80, 85, 90}, s.Value)
+	assert.Equal(t, []int{80, 85, 90}, s.Value)
 
 	buf := new(bytes.Buffer)
 	length := Marshal(buf, s)

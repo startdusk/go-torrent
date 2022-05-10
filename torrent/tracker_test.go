@@ -13,7 +13,7 @@ func TestFindPeers(t *testing.T) {
 	assert.Equal(t, nil, err)
 	tf, err := ParseFile(bufio.NewReader(file))
 	assert.Equal(t, nil, err)
-	peerID := [20]byte{'c', 'b', 't', '-', '2', '0', '2', '2', '-', '0', '4', '-', '1', '3', '-', '0', '0', '0', '0', '0'}
+	peerID := [20]byte{}
 	peers, err := FindPeers(tf, peerID, 6881)
 	assert.Equal(t, nil, err)
 	assert.Equal(t, len(peers), 50)

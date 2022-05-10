@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateRequest(t *testing.T) {
@@ -17,7 +17,7 @@ func TestCreateRequest(t *testing.T) {
 			0x00, 0x00, 0x10, 0xe1, // length
 		},
 	}
-	assert.DeepEqual(t, msg, expected)
+	assert.Equal(t, msg, expected)
 }
 
 func TestCreateHave(t *testing.T) {
@@ -28,7 +28,7 @@ func TestCreateHave(t *testing.T) {
 			0x00, 0x00, 0x00, 0x04,
 		},
 	}
-	assert.DeepEqual(t, msg, expected)
+	assert.Equal(t, msg, expected)
 }
 
 func TestString(t *testing.T) {
@@ -51,7 +51,7 @@ func TestString(t *testing.T) {
 
 	for _, c := range cases {
 		s := c.input.String()
-		assert.DeepEqual(t, c.output, s)
+		assert.Equal(t, c.output, s)
 	}
 }
 
@@ -160,10 +160,10 @@ func TestParsePiece(t *testing.T) {
 					assert.Error(t, err, "expected error")
 				}
 			} else {
-				assert.NilError(t, err)
+				assert.Nil(t, err)
 			}
-			assert.DeepEqual(t, test.outputBuf, test.inputBuf)
-			assert.DeepEqual(t, test.outputN, n)
+			assert.Equal(t, test.outputBuf, test.inputBuf)
+			assert.Equal(t, test.outputN, n)
 		})
 	}
 }
@@ -204,9 +204,9 @@ func TestParseHave(t *testing.T) {
 					assert.Error(t, err, "expected error")
 				}
 			} else {
-				assert.NilError(t, err)
+				assert.Nil(t, err)
 			}
-			assert.DeepEqual(t, test.output, index)
+			assert.Equal(t, test.output, index)
 		})
 	}
 }
@@ -229,7 +229,7 @@ func TestSerialize(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			buf := test.input.Serialize()
-			assert.DeepEqual(t, test.output, buf)
+			assert.Equal(t, test.output, buf)
 		})
 	}
 }
@@ -271,9 +271,9 @@ func TestRead(t *testing.T) {
 					assert.Error(t, err, "expected error")
 				}
 			} else {
-				assert.NilError(t, err)
+				assert.Nil(t, err)
 			}
-			assert.DeepEqual(t, test.output, m)
+			assert.Equal(t, test.output, m)
 		})
 	}
 }

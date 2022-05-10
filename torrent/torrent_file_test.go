@@ -29,5 +29,18 @@ func TestParseMultipleFile(t *testing.T) {
 	tf, err := ParseFile(bufio.NewReader(file))
 	assert.Equal(t, nil, err)
 
-	t.Errorf("%+v", tf)
+	assert.Equal(t, tf.Announce, "http://tracker.trackerfix.com:80/announce")
+	assert.Equal(t, tf.CreationDate, int64(1648983368))
+	assert.Equal(t, tf.Comment, "Torrent downloaded from https://rarbg.to")
+	assert.Equal(t, tf.CreatedBy, "RARBG")
+	assert.Equal(t, tf.AnnounceList, [][]string{
+		{"http://tracker.trackerfix.com:80/announce"},
+		{"udp://9.rarbg.me:2770/announce"},
+		{"udp://9.rarbg.to:2800/announce"},
+		{"udp://tracker.fatkhoala.org:13760/announce"},
+		{"udp://tracker.thinelephant.org:12750/announce"},
+	})
+
+	var expectHASH = [20]byte{0xe9, 0xce, 0x30, 0x88, 0x1b, 0x90, 0x5b, 0x80, 0x9e, 0xc0, 0x94, 0xbc, 0xb2, 0xf1, 0x7d, 0x20, 0x26, 0x27, 0xf0, 0x5f}
+	assert.Equal(t, tf.InfoHash, expectHASH)
 }
