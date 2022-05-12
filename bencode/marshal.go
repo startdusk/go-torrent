@@ -120,8 +120,15 @@ func unmarshalDict(p reflect.Value, dict map[string]*BObject) error {
 		if !fv.CanSet() {
 			continue
 		}
+
 		ft := v.Type().Field(i)
-		key := ft.Tag.Get("bencode")
+		tag := getTag(ft.Tag)
+		// Ignore nil field
+		// Because the nil field will affect the hash calculation later
+		if tag.OmitEmpty() && isEmptyValue(fv) {
+			continue
+		}
+		key := tag.Key()
 		if key == "" {
 			key = strings.ToLower(ft.Name)
 		}
@@ -204,13 +211,14 @@ func marshalDict(w io.Writer, vd reflect.Value) int {
 	w.Write([]byte{'d'})
 	for i := 0; i < vd.NumField(); i++ {
 		fv := vd.Field(i)
+		ft := vd.Type().Field(i)
+		tag := getTag(ft.Tag)
 		// Ignore nil field
 		// Because the nil field will affect the hash calculation later
-		if isEmptyValue(fv) {
+		if tag.OmitEmpty() && isEmptyValue(fv) {
 			continue
 		}
-		ft := vd.Type().Field(i)
-		key := ft.Tag.Get("bencode")
+		key := tag.Key()
 		if key == "" {
 			key = strings.ToLower(ft.Name)
 		}

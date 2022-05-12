@@ -74,6 +74,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 		file := file
 		g.Go(func() error {
 			p := path.Join(targetDir, tf.FileName, tf.MultipleFile.Name, strings.Join(file.Path, "/"))
+			log.Printf("assemble file: %s\n", p)
 			f, err := os.Create(p)
 			if err != nil {
 				return err
@@ -83,6 +84,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 
 			for i := 0; i < len(tf.PieceHashes); i++ {
 				err := func() error {
+					// p := path.Join(sourceDir, )
 					file, err := os.Open(sourceDir + "/" + fmt.Sprintf("%d", i))
 					if err != nil {
 						return fmt.Errorf("cannot find the #%d piece: %w", i, err)
@@ -96,7 +98,7 @@ func MakeFile(tf *TorrentFile, sourceDir, targetDir string) error {
 				}
 			}
 
-			log.Printf("completed assemble file: %s !!!\n", tf.FileName)
+			log.Printf("completed assemble file: %s !!!\n", p)
 			return w.Flush()
 		})
 	}

@@ -13,13 +13,13 @@ import (
 )
 
 type rawInfo struct {
-	Length      int64   `bencode:"length"`
-	Name        string  `bencode:"name"`
-	PieceLength int     `bencode:"piece length"`
-	Pieces      string  `bencode:"pieces"`
-	Private     *int    `bencode:"private"`
-	Files       []File  `bencode:"files"`
-	MD5Sum      *string `bencode:"md5sum"`
+	Length      int64  `bencode:"length"`
+	Name        string `bencode:"name"`
+	PieceLength int    `bencode:"piece length"`
+	Pieces      string `bencode:"pieces"`
+	Private     int    `bencode:"private,omitempty"`
+	Files       []File `bencode:"files"`
+	MD5Sum      string `bencode:"md5sum,omitempty"`
 }
 
 func (r rawInfo) IsMultiple() bool {
@@ -114,7 +114,7 @@ type TorrentFile struct {
 type File struct {
 	Length int64    `bencode:"length"`
 	Path   []string `bencode:"path"`
-	MD5Sum *string  `bencode:"md5sum"`
+	MD5Sum *string  `bencode:"md5sum,omitempty"`
 }
 
 type Info int
@@ -129,12 +129,12 @@ func (i Info) IsMultiple() bool {
 }
 
 type SingleFile struct {
-	Length      int64   `bencode:"length"`
-	Name        string  `bencode:"name"`
-	PieceLength int     `bencode:"piece length"`
-	Pieces      string  `bencode:"pieces"`
-	Private     *int    `bencode:"private"`
-	MD5Sum      *string `bencode:"md5sum"`
+	Length      int64  `bencode:"length"`
+	Name        string `bencode:"name"`
+	PieceLength int    `bencode:"piece length"`
+	Pieces      string `bencode:"pieces"`
+	Private     int    `bencode:"private,omitempty"`
+	MD5Sum      string `bencode:"md5sum,omitempty"`
 }
 
 type MultipleFile struct {
@@ -142,7 +142,7 @@ type MultipleFile struct {
 	Name        string `bencode:"name"`
 	PieceLength int    `bencode:"piece length"`
 	Pieces      string `bencode:"pieces"`
-	Private     *int   `bencode:"private"`
+	Private     int    `bencode:"private,omitempty"`
 }
 
 func (tf *TorrentFile) BuildURL(peerID types.PeerID, port uint16) (string, error) {

@@ -3,7 +3,6 @@ module github.com/startdusk/go-torrent/torrent
 go 1.18
 
 require (
-	github.com/startdusk/go-torrent/bencode v0.0.0-20220504134521-26a307ac1690
 	github.com/stretchr/testify v1.7.1
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
